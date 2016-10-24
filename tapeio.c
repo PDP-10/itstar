@@ -11,13 +11,15 @@
 
   opentape, closetape, posnbot, posneot, getrec, putrec, tapemark.
 
-  08/10/93  JMBW  IBM mainframe TCP socket stuff (was using many files).
-  07/08/94  JMBW  Local magtape code.
-  03/13/95  JMBW  Converted to separate routines.
-  07/19/98  JMBW  Added support for "rmt" remote tape protocol.
+  08/10/1993  JMBW  IBM mainframe TCP socket stuff (was using many files).
+  07/08/1994  JMBW  Local magtape code.
+  03/13/1995  JMBW  Converted to separate routines.
+  07/19/1998  JMBW  Added support for "rmt" remote tape protocol.
+  08/27/2001  JMBW  Support SIMH style tape files (with padding).
 
 */
 
+#include <errno.h>
 #include <netdb.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -65,6 +67,10 @@ static int response(), doioctl();
 static char *tape;	/* tape filename */
 
 unsigned long bpi=BPI;	/* tape density (for tape length msg) */
+
+int simh=1;		/* NZ => SIMH file format (records padded to even */
+			/* lengths) */
+			/* 0 => Ersatz-11 file format (no padding) */
 
 /* magtape commands */
 static struct mtop mt_weof={ MTWEOF, 1 }; /* operation, count */
@@ -146,7 +152,7 @@ opentape(char *name,int create,int writable)
 		strncpy(host,tape,len);		/* copy hostname */
 		host[len]=0;			/* tack on null */
 
-#ifdef 0
+#if 0
 /* left over from old IBM mainframe tape server code (JMBW's use only) */
 /* filename syntax is host:portno instead of host:devname */
 		/* get IP address */
@@ -303,6 +309,7 @@ int getrec(char *buf,int len)
 {
 	unsigned char byte[4];		/* 32 bits for length field(s) */
 	unsigned long l;		/* at least 32 bits */
+	unsigned char scratch[1];
 
 	if(tapesock) {			/* MTS tape server */
 		sendcode(TS_RDR);	/* read a record */
@@ -320,6 +327,8 @@ int getrec(char *buf,int len)
 		if(l>len) goto toolong;	/* don't read if too long for buf */
 		if(l!=0) {		/* get data unless tape mark */
 			doread(tapefd,buf,l);  /* read data */
+			/* SIMH pads odd records, read scratch byte */
+			if(simh&&(l&1)) doread(tapefd,scratch,1);
 			doread(tapefd,byte,4);  /* get trailing record length */
 			if((((unsigned long)byte[3]<<24L)|
 				((unsigned long)byte[2]<<16L)|
@@ -356,6 +365,7 @@ toolong:
 putrec(char *buf,int len)
 {
 	unsigned char l[4];
+	static unsigned char zero[1] = { 0 };
 
 	if(tapesock) {			/* MTS tape server */
 		sendcode(len);		/* command code is length */
@@ -369,6 +379,9 @@ putrec(char *buf,int len)
 		l[3]=0;
 		dowrite(tapefd,l,4);	/* write longword length */
 		dowrite(tapefd,buf,len);  /* write data */
+		/* SIMH pads odd records */
+		if(simh&&(len&1)) dowrite(tapefd,zero,1);
+					/* add byte if odd */
 		dowrite(tapefd,l,4);	/* write length again */
 	}
 	else if(tapermt) {		/* rmt tape */

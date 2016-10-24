@@ -4,7 +4,7 @@
 
   By John Wilson.
 
-  07/15/98  JMBW  Created.
+  07/15/1998  JMBW  Created.
 
 */
 
@@ -189,7 +189,8 @@ void pack(char *file)
 		exit(1);
 	}
 
-	if(taperead()<0) {	/* read first rec for nextword() */
+	if((remaining()==0)&&(taperead()<0)) {
+				/* read first rec for nextword() */
 		fclose(out);	/* null file, we're done */
 		return;
 	}

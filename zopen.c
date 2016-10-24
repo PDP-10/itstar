@@ -4,9 +4,9 @@
 
   By John Wilson.
 
-  04/11/93  JMBW  Created.
-  08/09/93  JMBW  Convert dates, uncompress .Z files automatically.
-  07/14/98  JMBW  Separated from DUMP.C.
+  04/11/1993  JMBW  Created.
+  08/09/1993  JMBW  Convert dates, uncompress .Z files automatically.
+  07/14/1998  JMBW  Separated from DUMP.C.
 
 */
 

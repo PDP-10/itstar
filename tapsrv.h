@@ -3,7 +3,7 @@
   Command opcodes used to talk to the TAPESRV program running under MTS on the
   IBM ES/9000 (the only machine around here with nice 9-track tape handling).
 
-  03/13/95	JMBW	Created.
+  03/13/1995  JMBW  Created.
 
   Protocol is as follows:
 
