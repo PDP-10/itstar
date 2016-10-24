@@ -1,0 +1,73 @@
+ITSTAR V1.00				by John Wilson <wilson@dbit.com>
+
+ITSTAR is a program that allows manipulation of DUMP tapes for the ITS
+operating system, on UNIX (-like) systems.  Its main purpose is to allow
+transferring files from the AI/MC snapshots to a real KS10.  The command
+syntax is a subset of UNIX "tar" syntax:
+
+itstar switches [file1 file2 file3...]
+
+Switches:
+
+Exactly one of the following is always required:
+ -c	create a DUMP archive
+ -r	append to an existing DUMP archive
+ -t	type out a list of files in the archive
+ -x	extract files from the archive
+
+The following additional switches may be added:
+ -v	verify (i.e. list on STDOUT) each file's name as it is processed
+ -fname	use "name" as the filename for the tape (drive), one of the following:
+	/dev/xxx	A real local tape drive (must start with "/dev/").
+	[user@]host:dev	A real remote tape drive, using the "rmt" protocol.
+	file		A tape image file (format defined below).
+	-		STDIN or STDOUT (format same as for files).
+ -h	help (print a list of these switches)
+
+For create/append operations, the rest of the command line is a list of
+files to be written to tape.  If a directory name is given, all files
+in that directory will be archived using their actual file information
+(i.e. dates and link names) unless the directory contains a DIR.LIST file,
+in which case information is taken from that file.  Files ending in .Z are
+automatically decompressed (in place) before being saved.
+
+Eventually it will be possible to specify a list of files to extract (for
+extract operations) but for now it extracts the whole tape.
+
+Conversions:  ITSTAR converts between Alan Bawden's evacuated file format
+(used in the AI/MC snapshots) and the format used by the TM03 tape formatter
+to store 36-bit words.  Filenames are also translated according to the same
+AI/MC rules, and are extracted from the UNIX filenames as follows:
+
+-UNIX-					-ITS-
+dir1/dir2/.../dirn/file.ext		DIRN;FILE EXT
+
+Missing filename elements are defaulted to "UFD;FN1 FN2" which are very
+unlikely to be right so you should arrange for your filenames to include
+all three elements.  For example if you're in directory "foo" and you want
+to write out all files named "bar", you should say "itstar c ../foo/bar.*"
+rather than just "itstar c bar.*".
+
+Tape image file format:  UNIX tries to make everything look like a stream
+of bytes, which is a shame because tapes have intrinsic record structure.
+Most UNIX software solves this mismatch by ignoring it (record lengths are
+fixed and tape marks are unheard of) but DUMP tapes must have a particular
+record structure which must be preserved in the image file.  So the file
+consists of a series of records and tape marks, stored like this:
+
+Tape record:
+	.long	length		;32-bit record length, PDP-11 byte order
+				;(NOT padded to any particular addr boundary)
+	.blkb	length		;the data for the record
+	.long	length		;length again (for backspacing)
+
+Tape mark:
+	.long	0		;only once, since it's the same backwards
+
+This format is the same as that used by the Ersatz-11 PDP-11 emulator, for
+what that's worth.  Contact the author for a utility to transfer between
+real tapes and image files under DOS/ASPI (you can't be picky when you're
+looking for a machine with a 9-track drive on it these days!).
+
+John Wilson  <wilson@dbit.com>, JOHNW@AI as a turist
+ITSTAR home:  http://www.dbit.com/pub/pdp10/its/itstar

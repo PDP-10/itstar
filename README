@@ -1,0 +1,39 @@
+This directory contains ITSTAR, a program for manipulating ITS DUMP tapes
+on UNIX (-like) systems.  It's mainly intended for building install tapes
+using files from the AI/MC snapshots, but it provides general read/write
+access to DUMP tapes using a subset of TAR's command set.  Yeah it's ugly
+but at least it's familiar to a lot of people.
+
+itstar.doc contains documentation.  As of V1.00, extracting gets the whole
+tape, the ability to select individual files will be added later if anyone
+seems to care.  It's a bit dumb about UFD names, the best thing to do is
+to run ITSTAR in the parent directory above the UNIX copy of the UFD(s),
+so that it can easily translate "ufd/file.ext" to UFD; FILE EXT.
+
+The current version is only tested with Linux/x86, it's intended to be pretty
+portable (no dependencies on word size, byte order, or any tricky libraries)
+but who knows, anyway if you have to do anything special to make it run on
+your system please let me know so I can fix it.  The calls to set the block
+size and density on SCSI 9-track drives may need tweaking.  It ought to be
+64-bit clean and would be Y2K-safe if ITS were (although of course there's
+still the 2412 bug!).  Sorry, 7-track tapes are not supported (easily fixed
+in tm03.c I would think, but good luck finding a UNIX box with a 7-tracker).
+
+Files:
+
+Makefile	...
+README		this file
+dirlst.c	DIR.LIST file parser
+itstar.c	main program
+itstar.doc	doc file (no it's NOT M$ Word!)
+pack.c		code to pack 36-bit words into UNIX files
+tapeio.c	magtape I/O code
+tapsrv.h	opcodes for my old IBM mainframe MTS tape server, don't ask!
+tm03.c		pack/unpack 36-bit words the same as TM03 tape formatter does
+unpack.c	unpack UNIX files into 36-bit words
+zopen.c		open a file, uncompressing if needed
+
+Have fun,
+
+John Wilson
+D Bit  www.dbit.com
