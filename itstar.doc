@@ -1,4 +1,4 @@
-ITSTAR V1.00				by John Wilson <wilson@dbit.com>
+ITSTAR V1.10				by John Wilson <wilson@dbit.com>
 
 ITSTAR is a program that allows manipulation of DUMP tapes for the ITS
 operating system, on UNIX (-like) systems.  Its main purpose is to allow
@@ -57,14 +57,16 @@ consists of a series of records and tape marks, stored like this:
 
 Tape record:
 	.long	length		;32-bit record length, PDP-11 byte order
-				;(NOT padded to any particular addr boundary)
 	.blkb	length		;the data for the record
+	.even			;*** CHANGE IN ITSTAR V1.10 ***
 	.long	length		;length again (for backspacing)
 
 Tape mark:
 	.long	0		;only once, since it's the same backwards
 
-This format is the same as that used by the Ersatz-11 PDP-11 emulator, for
+This format is compatible with the "SIMH" PDP-10 emulator, and close to
+to that used by the Ersatz-11 PDP-11 emulator (can be changed to exactly
+the E11 format by setting the "simh" variable in tapeio.c to zero), for
 what that's worth.  Contact the author for a utility to transfer between
 real tapes and image files under DOS/ASPI (you can't be picky when you're
 looking for a machine with a 9-track drive on it these days!).

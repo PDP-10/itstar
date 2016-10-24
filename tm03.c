@@ -11,18 +11,19 @@
   "don't care" data on read.
 
   Entry points:
-  resetbuf, tapeflush, taperead, inword, outword.
+  resetbuf, tapeflush, taperead, inword, outword, remaining.
 
   By John Wilson.
 
-  03/14/95	JMBW	Created.
+  03/14/1995  JMBW  Created.
 
 */
 
 #include <stdio.h>
 
-#define RECLEN (5*512)	/* we deal in 512-word records */
-			/* (AI:SYSDOC;DUMP FORMAT says 1024 but it's wrong) */
+//#define RECLEN (5*512)	/* we deal in 512-word records */
+//			/* (AI:SYSDOC;DUMP FORMAT says 1024 but it's wrong) */
+#define RECLEN (10*512)	/* maybe it's not so wrong after all */
 
 void outword();
 
@@ -109,6 +110,12 @@ int nextword(long *l,long *r)
 
 	recl-=5;			/* count it */
 	return(0);
+}
+
+/* return # of words remaining in buffer */
+int remaining()
+{
+	return(recl/5);
 }
 
 /* write a word */

@@ -4,11 +4,11 @@
 
   By John Wilson <wilson@dbit.com>, JOHNW.
 
-  04/02/93  JMBW  Created.
-  08/10/93  JMBW  Mangled to write to TCP socket (using MTS tape drives).
-  07/08/94  JMBW  Finished local magtape code but didn't test it.
-  07/15/98  JMBW  -c, -r, -t functions finished.
-  07/18/98  JMBW  -x function finished.
+  04/02/1993  JMBW  Created.
+  08/10/1993  JMBW  Mangled to write to TCP socket (using MTS tape drives).
+  07/08/1994  JMBW  Finished local magtape code but didn't test it.
+  07/15/1998  JMBW  -c, -r, -t functions finished.
+  07/18/1998  JMBW  -x function finished.
 
 */
 
@@ -32,6 +32,7 @@
 /* variables for estimating length of tape used: */
 extern unsigned long bpi;	/* tape density in bits per inch */
 extern unsigned long count;	/* count of tape frames written */
+extern int simh;		/* NZ to support SIMH tape images */
 
 static void usage(), itsname(), extitsname();
 static void addfiles(), addfile(), listfiles(), listfile(),
@@ -136,6 +137,7 @@ main(int argc,char **argv)
 	if(append) {			/* append to existing tape */
 		opentape(tape,0,1);	/* open tape */
 		posneot(1);		/* space to EOT */
+		resetbuf();		/* start a new record */
 		addfiles(argc,argv);	/* add files onto end */
 	}
 	else if(create) {		/* initialize and write tape */
@@ -169,11 +171,12 @@ writevolhdr()
 	if(verify) printf("Tape %ld, reel %ld\n",tapeno,reelno);
 	outsix(date6);		/* 3: today's date */
 	outword(0L,0L);		/* 4: random dump (not full/incremental) */
-	tapeflush();		/* write it out */
+/*	tapeflush();	*/	/* write it out */
 	/* N.B. no tape mark between vol. header and first file label */
 }
 
 /* add files to a DUMP tape */
+/* output buffer must have been initialized with resetbuf() */
 static void addfiles(int argc,char **argv)
 {
 	int c=argc;
@@ -188,6 +191,7 @@ static void addfiles(int argc,char **argv)
 }
 
 /* add a single file to a DUMP tape */
+/* output buffer must have been initialized with resetbuf() */
 static void addfile(int argc,char **argv,char *f)
 {
 	struct stat s;
@@ -256,11 +260,11 @@ static void addfile(int argc,char **argv,char *f)
 }
 
 /* save a file based using information in UFD/FN1/FN2/CDATE etc. */
+/* output buffer must have been initialized with resetbuf() */
 void save(char *f)
 {
 	if(verify) printf("%s => %s;%s %s ",f,ufd,fn1,fn2);
 
-	resetbuf();		/* init file header record (7 words) */
 	outword(-7L,0L);	/* 1: AOBJN ptr giving length */
 	outsix(ufd);		/* 2: UFD */
 	outsix(fn1);		/* 3: filename 1 */
@@ -282,7 +286,7 @@ void save(char *f)
 		((((unsigned long)cdate.tm_hour*60L)+
 		(unsigned long)cdate.tm_min)*60L+
 		(unsigned long)cdate.tm_sec)*2L);  /* 7: date of last ref */
-	tapeflush();		/* finish off label record */
+/*	tapeflush();	*/	/* finish off label record */
 
 	if(islink) {		/* it's a link, not a file */
 		outsix(lfn1);	/* write it out (note funny order) */
@@ -344,7 +348,7 @@ static void extfile()
 
 	/* create the file (or link) */
 	if(islink) {			/* it's a link */
-		if(taperead()<0) {
+		if((remaining()==0)&&(taperead()<0)) {
 			fprintf(stderr,"?Unexpected EOF\n");
 			exit(1);
 		}
@@ -391,20 +395,29 @@ static void scantape(int argc,char **argv,void (*process)())
 		exit(1);
 	}
 
-	if(type) {		/* display volume header info */
-		inword(&l,&r);	/* 1: AOBJN ptr giving length */
-		len=01000000L-l; /* length of record */
-		if(len>=3) {
-			inword(&l,&r);
+		/* display volume header info */
+	inword(&l,&r);	/* 1: AOBJN ptr giving length */
+	len=01000000L-l; /* length of record */
+	if(len>=4) {
+		inword(&l,&r);	/* 2: tape,,real */
+		if(type)
 			printf("Tape %ld, reel %ld",l,r);
-			insix(ufd);
-			printf(", created %c%c/%c%c/%c%c\n",
-				ufd[2],ufd[3],ufd[4],ufd[5],ufd[0],ufd[1]);
-		}
+		insix(ufd);	/* 3: SIXBIT creation date */
+		inword(&l,&r);	/* 4: type */
+				/* 0=random, >0=full, <0=incremental */
+		if(type)
+			printf(", created %c%c/%c%c/%c%c, type=%s\n",
+				ufd[2],ufd[3], ufd[4],ufd[5], ufd[0],ufd[1],
+				(l|r)==0?"random":
+					((l&0400000)?"incremental":"full"));
+		len-=4;		/* eat those words */
 	}
+	while(len--) inword(&l,&r);  /* eat unknown words */
+	if(remaining()!=0)	/* file header in same rec */
+		goto fhead;
 
 	while(taperead()==0) {	/* read file label */
-		inword(&l,&r);	/* 1: AOBJN ptr giving length */
+	fhead:	inword(&l,&r);	/* 1: AOBJN ptr giving length */
 		len=01000000L-l; /* length of record */
 		if(len<4) {	/* must have at least filename */
 			fprintf(stderr,"?Invalid tape format\n");
@@ -413,11 +426,14 @@ static void scantape(int argc,char **argv,void (*process)())
 		insix(ufd);	/* 2: UFD */
 		insix(fn1);	/* 3: FN1 */
 		insix(fn2);	/* 4: FN2 */
-		if(len>=5)	/* 5: linkf,,pack */
+		len-=4;		/* count those words */
+		if(len) {	/* 5: linkf,,pack */
 			inword(&islink,&r);
+			len--;
+		}
 		else islink=0;	/* (assume file if missing) */
 
-		if(len>=6) {	/* 6: creation date */
+		if(len) {	/* 6: creation date */
 			inword(&l,&r);
 			cdate.tm_year=(l>>9L);
 			cdate.tm_mon=((l>>5L)&017)-1;
@@ -426,10 +442,11 @@ static void scantape(int argc,char **argv,void (*process)())
 			cdate.tm_min=(r/(60L*2L))%60L;
 			cdate.tm_sec=(r/2L)%60L;
 			cdate.tm_isdst=(-1);
+			len--;
 		}
 		else cdate.tm_year=0;
 
-		if(len>=7) {	/* 7: reference date */
+		if(len) {	/* 7: reference date */
 			inword(&l,&r);
 			rdate.tm_year=(l>>9L);
 			rdate.tm_mon=((l>>5L)&017)-1;
@@ -438,8 +455,11 @@ static void scantape(int argc,char **argv,void (*process)())
 			rdate.tm_min=(r/(60L*2L))%60L;
 			rdate.tm_sec=(r/2L)%60L;
 			rdate.tm_isdst=(-1);
+			len--;
 		}
 		else rdate.tm_year=0;
+
+		while(len--) inword(&l,&r);	/* eat unknown words */
 
 		(*process)();	/* process the file */
 	}
@@ -449,7 +469,7 @@ static void usage(int rc)
 {
 	fprintf(stderr,"\
 \n\
-ITSTAR V1.00  By John Wilson <wilson@dbit.com>\n\
+ITSTAR V1.10  By John Wilson <wilson@dbit.com>\n\
 Access ITS DUMP tapes\n\
 \n\
 Usage:  itstar switches file1 file2 file3 ...\n\
@@ -467,7 +487,7 @@ switches:\n\
 \n");
 
 /* need some way to differentiate rmt protocol from my own weird one,
-   and to specify port (assume I ever sink to the level of supporting rmt) */
+   and to specify port */
 
 	exit(rc);
 }

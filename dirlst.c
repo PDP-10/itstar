@@ -4,8 +4,8 @@
 
   By John Wilson.
 
-  08/09/93  JMBW  Created.
-  07/14/98  JMBW  Separated from DUMP.C.
+  08/09/1993  JMBW  Created.
+  07/14/1998  JMBW  Separated from DUMP.C.
 
 */
 
@@ -39,6 +39,8 @@ extern struct tm cdate, rdate;
 static char lispoffset[16] = { 0,0,8,8,8,9,8,0,2,2,0,0,0,0,0,0 };
 #define LISPLEN sizeof(lispoffset)
 
+/* process a DIR.LIST file, if one exists */
+/* output buffer must have been initialized with resetbuf() */
 int dirlist(int argc,char **argv,char *d)
 {
 	char *name=malloc(strlen(d)+1+8+1);  /* dir name, /, DIR.LIST, NUL */

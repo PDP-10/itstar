@@ -4,7 +4,11 @@ using files from the AI/MC snapshots, but it provides general read/write
 access to DUMP tapes using a subset of TAR's command set.  Yeah it's ugly
 but at least it's familiar to a lot of people.
 
-itstar.doc contains documentation.  As of V1.00, extracting gets the whole
+V1.10 is a new version, hacked to use the "SIMH" tape image file format
+by default, which is just slightly incompatible with the Ersatz-11 tape
+format.  Set the "simh" variable to 0 to restore the old behavior.
+
+itstar.doc contains documentation.  As of V1.10, extracting gets the whole
 tape, the ability to select individual files will be added later if anyone
 seems to care.  It's a bit dumb about UFD names, the best thing to do is
 to run ITSTAR in the parent directory above the UNIX copy of the UFD(s),

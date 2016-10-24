@@ -5,9 +5,9 @@
 
   By John Wilson.
 
-  04/11/93  JMBW  Created.
-  08/09/93  JMBW  Convert dates, uncompress .Z files automatically.
-  07/14/98  JMBW  Separated from DUMP.C.
+  04/11/1993  JMBW  Created.
+  08/09/1993  JMBW  Convert dates, uncompress .Z files automatically.
+  07/14/1998  JMBW  Separated from DUMP.C.
 
 */
 
@@ -211,15 +211,16 @@ unpack(char *file)
 
 	incnt=0L;	/* used for error msgs if file invalid */
 	while((incnt++,c=getc(in))!=EOF) {
-		if(c>=0360) {
+		if(c>=0360) {	/* quoted binary word */
 			word[0]=(c&017);
-			for(i=1;i<=4;i++) {
+			for(i=1;i<=4;i++) {  /* 4 more bytes */
 				if((incnt++,word[i]=getc(in))==EOF) {
 					fprintf(stderr,
-					"?Unexpected EOF: %s",file);
+					"?Unexpected EOF: %s\n",file);
 					exit(1);
 				}
 			}
+			/* assemble the 36-bit binary word */
 			outword((word[0]<<14L)|(word[1]<<6L)|
 				((word[2]>>2L)&077L),
 				((word[2]&003L)<<16L)|
