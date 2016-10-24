@@ -70,7 +70,7 @@ static void file(char *dirname)
 	char c, *p, *q;
 	int len;
 	long size, byte;
-	time_t long date1, date2;
+	time_t date1, date2;
 	struct tm *d;
 
 	if(!eat('(')) punt();
