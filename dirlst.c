@@ -67,7 +67,7 @@ static void file(char *dirname)
 	char *fname;
  
 	static char date[LISPLEN];
-	char c, *p, *q;
+	char *p, *q;
 	int len;
 	long size, byte;
 	time_t date1, date2;
