@@ -13,6 +13,7 @@
 
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -195,7 +196,7 @@ NONE, NONE, NONE, NONE, NONE, NONE, NONE, 0007,	/* 170 */
 0150, 0151, 0152, 0153, 0154, 0155, NONE, NONE	/* 350 */
 };
 
-unpack(char *file)
+void unpack(char *file)
 {
 	register int c;
 	register char b;

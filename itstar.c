@@ -28,6 +28,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <utime.h>
+#include <ctype.h>
 
 /* variables for estimating length of tape used: */
 extern unsigned long bpi;	/* tape density in bits per inch */
@@ -39,6 +40,9 @@ static void addfiles(), addfile(), listfiles(), listfile(),
 	extfiles(), extfile();
 static void scantape(int argc,char **argv,void (*process)());
 void save(), weenixname(), nomem();
+void writevolhdr(void);
+void outsix(char *s);
+void insix(char *s);
 
 int append=0;	/* func=append */
 int create=0;	/* func=create */
@@ -61,7 +65,7 @@ static char sbuf[256];	/* scratch buffer, for readlink() */
 
 static char *tape=NULL;  /* name of tape drive or file */
 
-main(int argc,char **argv)
+int main(int argc,char **argv)
 {
 	int i;
 	time_t t0;
@@ -163,7 +167,7 @@ main(int argc,char **argv)
 }
 
 /* write DUMP volume header to tape */
-writevolhdr()
+void writevolhdr(void)
 {
 	resetbuf();		/* a record all to itself */
 	outword(-4L,0L);	/* 1: AOBJN pointer giving length */
@@ -186,7 +190,7 @@ static void addfiles(int argc,char **argv)
 		addfile(argc,argv,*v++);
 	}
 	if(verify)
-		printf("Approximately %d.%d' of tape used\n",count/bpi/12,
+		printf("Approximately %lu.%lu' of tape used\n",count/bpi/12,
 			(count*10/bpi/12)%10);
 }
 
@@ -494,7 +498,7 @@ switches:\n\
 
 /* write a 6-character ASCII string as a word of SIXBIT */
 /* it is assumed that the string contains no non-sixbit characters */
-outsix(char *s)
+void outsix(char *s)
 {
 	unsigned long six[6], *p;
 	int i;
@@ -508,7 +512,7 @@ outsix(char *s)
 }
 
 /* read a 36-bit SIXBIT word as 0-6 ASCII characters */
-insix(char *s)
+void insix(char *s)
 {
 	char *p;
 	int i;

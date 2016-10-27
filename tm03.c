@@ -20,6 +20,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 //#define RECLEN (5*512)	/* we deal in 512-word records */
 //			/* (AI:SYSDOC;DUMP FORMAT says 1024 but it's wrong) */
@@ -33,14 +34,14 @@ static int recl;	/* record length on read */
 
 /* prepare to begin writing or reading a record (call before switching r/w!) */
 /* (actually, only used for writing records now -- JMBW 07/14/98) */
-resetbuf()
+void resetbuf()
 {
 	tapeptr=tapebuf;		/* used when writing */
 	recl=0;				/* used when reading */
 }
 
 /* flush tape output buffer if needed */
-tapeflush()
+void tapeflush()
 {
 	if(tapeptr!=tapebuf) {		/* something to flush */
 		while((tapeptr-tapebuf)<12)

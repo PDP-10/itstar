@@ -63,6 +63,7 @@ void nomem();
 
 static void doread(), dowrite(), sendcode(), getrc();
 static int response(), doioctl();
+void tapemark();
 
 static char *tape;	/* tape filename */
 
@@ -99,7 +100,7 @@ static struct sockaddr_in addr;  /* socket addr structure for remote TAPESRV */
 
 /* open the tape drive (or whatever) */
 /* "create" =1 to create if file, "writable" =1 to open with write access */
-opentape(char *name,int create,int writable)
+void opentape(char *name,int create,int writable)
 {
 	char *p, *host, *user, *port;
 	int len;
@@ -224,7 +225,7 @@ opentape(char *name,int create,int writable)
 }
 
 /* close the tape drive */
-closetape()
+void closetape()
 {
 	if(waccess) {			/* opened for create/append */
 		tapemark();		/* add one more tape mark */
@@ -248,7 +249,7 @@ closetape()
 }
 
 /* rewind tape */
-posnbot()
+void posnbot()
 {
 	if(tapesock) {			/* MTS tape server */
 		sendcode(TS_REW);	/* cmd=$CONTROL *TAPE* REW */
@@ -269,7 +270,7 @@ posnbot()
 }
 
 /* position tape at EOT (between the two tape marks) */
-posneot()
+void posneot()
 {
 	if(tapesock) {			/* MTS tape server */
 		sendcode(TS_EOT);	/* cmd=go to LEOT */
@@ -362,7 +363,7 @@ toolong:
 }
 
 /* write a tape record */
-putrec(char *buf,int len)
+void putrec(char *buf,int len)
 {
 	unsigned char l[4];
 	static unsigned char zero[1] = { 0 };
@@ -396,7 +397,7 @@ putrec(char *buf,int len)
 }
 
 /* write a tape mark */
-tapemark()
+void tapemark()
 {
 	static char zero[4]={ 0, 0, 0, 0 };
 
