@@ -201,7 +201,7 @@ static void addfile(int argc,char **argv,char *f)
 	struct stat s;
 
 	/* look up file information */
-	if(stat(f,&s)<0) {
+	if(lstat(f,&s)<0) {
 		fprintf(stderr,"?Error accessing %s\n",f);
 		exit(1);
 	}
