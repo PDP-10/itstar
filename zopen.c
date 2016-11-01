@@ -59,7 +59,7 @@ static void uncompress(char *file)
 {
 	char *filez;
 	int h, hz;
-	union wait stat;
+	int stat;
 	pid_t pid;
 
 	if((filez=malloc(strlen(file)+2+1))==NULL)  /* allow for ".Z"<0> */
@@ -88,7 +88,7 @@ static void uncompress(char *file)
 		}
 		close(hz), close(h);
 		wait(&stat);
-		if(stat.w_status&0xFF00) { /* non-zero RC */
+		if(WEXITSTATUS(stat) != 0) { /* non-zero RC */
 			fprintf(stderr,"?Error uncompressing %s\n",filez);
 			exit(1);
 		}
