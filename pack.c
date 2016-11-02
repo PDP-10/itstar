@@ -30,6 +30,7 @@ static void outword();
 static int outcnt;	/* # chars saved in OUTBUF */
 static char outbuf[5+1];  /* chars written since last word boundary */
 			/* +1 is for char from PREV */
+extern int coredump;
 
 /*
  
@@ -211,6 +212,14 @@ void pack(char *file)
 			outbyte(((l<<2L)&0374L)|((r>>16L)&0003L));
 			outbyte((r>>8L)&0377L);
 			outbyte(r&0377L);
+			continue;
+		} else if(coredump) {
+			flushprev();
+			outbyte((l>>10L)&0377);
+			outbyte((l>>2L)&0377L);
+			outbyte(((l<<6L)&0300L)|((r>>12L)&0077L));
+			outbyte((r>>4L)&0377L);
+			outbyte(r&017L);
 			continue;
 		}
 

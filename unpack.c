@@ -21,6 +21,7 @@
 #include <string.h>
 
 FILE *in, *out;
+extern int coredump;
 
 FILE *zopen();
 static void flush();
@@ -212,8 +213,11 @@ void unpack(char *file)
 
 	incnt=0L;	/* used for error msgs if file invalid */
 	while((incnt++,c=getc(in))!=EOF) {
-		if(c>=0360) {	/* quoted binary word */
-			word[0]=(c&017);
+		if(c>=0360 || coredump) {	/* quoted binary word */
+			if(coredump)
+				word[0]=c;
+			else
+				word[0]=(c&017);
 			for(i=1;i<=4;i++) {  /* 4 more bytes */
 				if((incnt++,word[i]=getc(in))==EOF) {
 					fprintf(stderr,
@@ -222,10 +226,16 @@ void unpack(char *file)
 				}
 			}
 			/* assemble the 36-bit binary word */
-			outword((word[0]<<14L)|(word[1]<<6L)|
-				((word[2]>>2L)&077L),
-				((word[2]&003L)<<16L)|
-				(word[3]<<8L)|word[4]);
+			if(coredump)
+				outword((word[0]<<10L)|(word[1]<<2L)|
+					((word[2]>>6L)&003L),
+					((word[2]&0374)<<10L)|
+					(word[3]<<4L)|(word[4]&017));
+			else
+				outword((word[0]<<14L)|(word[1]<<6L)|
+					((word[2]>>2L)&077L),
+					((word[2]&003L)<<16L)|
+					(word[3]<<8L)|word[4]);
 		}
 		else {
 			word[0]=first[c], i=1;	/* write first char */

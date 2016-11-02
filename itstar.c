@@ -49,6 +49,7 @@ int create=0;	/* func=create */
 int type=0;	/* func=type filenames */
 int extract=0;	/* func=extract files */
 int verify=0;	/* NZ => print names of all files processed on stdout */
+int coredump=0; /* NZ => use core dump format to read/write files */
 
 unsigned long tapeno=1, reelno=0;  /* DUMP tape, reel number */
 
@@ -103,6 +104,9 @@ int main(int argc,char **argv)
 					break;
 				case 'x':	/* extract files */
 					extract=1;
+					break;
+				case 'C':	/* core dump format */
+					coredump=1;
 					break;
 				default:
 					fprintf(stderr,"?Invalid option: %c\n",
@@ -488,6 +492,7 @@ switches:\n\
   -f -          use STDIN/STDOUT for image file\n\
   -f HOST:DEV   use \"rmt\" remote tape server\n\
   -v            verify (display) names of all files accessed\n\
+  -C            read/write files in core dump format\n\
 \n");
 
 /* need some way to differentiate rmt protocol from my own weird one,
