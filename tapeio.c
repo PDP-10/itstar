@@ -44,6 +44,16 @@
 #define MTSETBLK STSETBLK
 #define MTSETDENSITY STSETDENSITY
 #define mtop stop
+#elif __APPLE__
+#define MTWEOF 0
+#define MTREW 0
+#define MTFSR 0
+#define MTFSF 0
+#define MTBSR 0
+#define MTIOCTOP 0
+#define MTSETBLK 0
+#define MTSETDENSITY 0
+struct mtop { int mt_op; int mt_count; };
 #else
 #include <sys/mtio.h>
 #endif
@@ -193,11 +203,13 @@ void opentape(char *name,int create,int writable)
 			*p++='\0';	/* shoot out @, point at host name */
 			user=(*p!='\0')?host:NULL;  /* keep non-null user */
 		}
+#ifndef __APPLE__
 		if((tapefd=rexec(&p,htons(512),user,NULL,"/etc/rmt",
 			(int *)NULL))<0) {
 			perror("?Connection failed");
 			exit(1);
 		}
+#endif
 
 		/* build rmt "open device" command */
 		if((1+strlen(port)+1+1+1+1)>sizeof(netbuf)) {

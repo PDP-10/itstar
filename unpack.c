@@ -12,7 +12,9 @@
 */
 
 #include <fcntl.h>
+#define zopen apple_zopen
 #include <stdio.h>
+#undef zopen
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -22,7 +24,7 @@
 
 FILE *in, *out;
 
-FILE *zopen();
+FILE *zopen(char *);
 static void flush();
 
 /*
