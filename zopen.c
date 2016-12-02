@@ -11,7 +11,9 @@
 */
 
 #include <fcntl.h>
+#define zopen apple_zopen
 #include <stdio.h>
+#undef zopen
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
