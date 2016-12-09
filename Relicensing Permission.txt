@@ -1,0 +1,25 @@
+Date: Wed, 29 Jun 2016 23:40:26 -0400
+From: John Wilson <wilson@dbit.com>
+Subject: Re: itstar
+Message-ID: <20160630034026.GA26313@dbit.dbit.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.5.22 (2013-10-16)
+
+Aw crap -- it went in spam.  Sorry about that.  GPL is generally OK with
+me but I know some people get all huffy about it because of the required
+access to source code.  I see both sides of freedom there -- guaranteeing
+the freedom to peek at the insides and make mods or borrow code is one
+thing, but giving developers the freedom to roll the code into their own
+project w/o having to divulge their own source code is another, and they're
+kind of at odds (each side thinks the other is missing the point).  But
+this doesn't seem like the kind of thing that someone would really want
+to stick into a closed-source project anyway, so sure, GPL sounds fine.
+I'm about to go away for the weekend, but I'll look at updating what's
+on dbit.com (man it's *so old* now!  I think there's even still code in
+it from when my easiest access to magtapes was through the neighborhood
+IBM mainframe) to GPL when I get abck.
+
+John Wilson
+D Bit
