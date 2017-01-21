@@ -37,6 +37,8 @@
 #include <time.h>
 #include <string.h>
 
+#include "itstar.h"
+
 FILE *in, *out;
 
 FILE *zopen(char *);

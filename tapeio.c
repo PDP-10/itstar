@@ -71,6 +71,10 @@
 struct mtop { int mt_op; int mt_count; };
 #else
 #include <sys/mtio.h>
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
+#define MTSETBLK MTSETBSIZ
+#define MTSETDENSITY MTSETDNSTY
+#endif
 #endif
 
 #ifndef O_BINARY
@@ -338,6 +342,7 @@ int getrec(char *buf,int len)
 	unsigned char byte[4];		/* 32 bits for length field(s) */
 	unsigned long l;		/* at least 32 bits */
 	unsigned char scratch[1];
+	int i;
 
 	if(tapesock) {			/* MTS tape server */
 		sendcode(TS_RDR);	/* read a record */
@@ -370,17 +375,19 @@ int getrec(char *buf,int len)
 	else if(tapermt) {		/* rmt tape server */
 		len=sprintf(netbuf,"R%d\n",len);
 		dowrite(tapefd,netbuf,len);
-		if((l=response())<0) {
+		if((i=response())<0) {
 			perror("?Error reading tape");
 			exit(1);
 		}
+		l = i;
 		if(l) doread(tapefd,buf,l);
 	}
 	else {				/* local tape drive */
-		if((l=read(tapefd,buf,len))<0) {
+		if((i=read(tapefd,buf,len))<0) {
 			perror("?Error reading tape");
 			exit(1);
 		}
+		l = i;
 	}
 	return(l);
 toolong:
