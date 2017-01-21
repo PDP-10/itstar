@@ -45,6 +45,8 @@
 #include <utime.h>
 #include <ctype.h>
 
+#include "itstar.h"
+
 /* variables for estimating length of tape used: */
 extern unsigned long bpi;	/* tape density in bits per inch */
 extern unsigned long count;	/* count of tape frames written */

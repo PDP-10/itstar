@@ -32,6 +32,8 @@
 #include <time.h>
 #include <string.h>
 
+#include "itstar.h"
+
 /* macro to send one byte to output file */
 #define outbyte(c) outbuf[outcnt++]=c
 /* macro to flush byte stored in PREV after we discover sequence won't work */
@@ -41,7 +43,7 @@
 	prev=0;
 
 static FILE *out;
-static void outword();
+static void outwrd();
 static int outcnt;	/* # chars saved in OUTBUF */
 static char outbuf[5+1];  /* chars written since last word boundary */
 			/* +1 is for char from PREV */
@@ -217,7 +219,7 @@ void pack(char *file)
 			flushprev();
 			break;
 		}
-		outword();	/* starting a new word, flush previous */
+		outwrd();	/* starting a new word, flush previous */
 		if(r&1) {	/* b35 set => can't be ASCII */
 			flushprev();
 			/* pack up a quoted word */
@@ -270,14 +272,14 @@ void pack(char *file)
 	/* word, but it can't be ^C (since PREV is only for 015 and 177) so */
 	/* we won't screw up the previous word if the file ends with 6 ^Cs */
 	while(outcnt&&outbuf[outcnt-1]==003) outcnt--;
-	outword();		/* flush bytes from final word, if any */
+	outwrd();		/* flush bytes from final word, if any */
 
 	fclose(out);
 	return;
 }
 
 /* flush all bytes saved in OUTBUF to the output file, and set OUTCNT=0 */
-static void outword()
+static void outwrd()
 {
 	char *p;
 	for(p=outbuf;outcnt;outcnt--) {	/* write out all stored bytes */
