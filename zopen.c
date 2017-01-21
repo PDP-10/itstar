@@ -31,9 +31,12 @@
 #undef zopen
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+
+#include "itstar.h"
 
 #define ZCAT "/bin/zcat"
 

@@ -33,6 +33,8 @@
 #include <sys/types.h>
 #include <time.h>
 
+#include "itstar.h"
+
 FILE *zopen(char *);
 void nomem();
 

@@ -13,30 +13,19 @@
 # You should have received a copy of the GNU General Public License
 # along with itstar.  If not, see <http://www.gnu.org/licenses/>.
 
+UNAME != uname
+-include $(UNAME).conf
+
 itstar: itstar.o dirlst.o pack.o tapeio.o tm03.o unpack.o zopen.o
-	cc -o itstar itstar.o dirlst.o pack.o tapeio.o tm03.o unpack.o zopen.o
+	cc -o itstar itstar.o dirlst.o pack.o tapeio.o \
+		tm03.o unpack.o zopen.o $(LIBS)
 	strip itstar
 
-itstar.o: itstar.c
-	cc -O -c itstar.c
+.c.o: itstar.h
+	cc -O -c $<
 
-dirlst.o: dirlst.c
-	cc -O -c dirlst.c
-
-pack.o: pack.c
-	cc -O -c pack.c
-
-tapeio.o: tapeio.c tapsrv.h
+tapeio.o: tapeio.c itstar.h tapsrv.h
 	cc -O -c tapeio.c
 
-tm03.o: tm03.c
-	cc -O -c tm03.c
-
-unpack.o: unpack.c
-	cc -O -c unpack.c
-
-zopen.o: zopen.c
-	cc -O -c zopen.c
-
 clean:
-	rm *.o itstar
+	-rm *.o itstar
