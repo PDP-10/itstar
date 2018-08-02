@@ -52,7 +52,7 @@ extern unsigned long bpi;	/* tape density in bits per inch */
 extern unsigned long count;	/* count of tape frames written */
 extern int simh;		/* NZ to support SIMH tape images */
 
-static void usage(), itsname(), extitsname();
+static void usage(), itsname(), extitsname(), changedir();
 static void addfiles(), addfile(), listfiles(), listfile(),
 	extfiles(), extfile();
 static void scantape(int argc,char **argv,void (*process)());
@@ -80,6 +80,7 @@ struct tm cdate, rdate;  /* creation, ref dates (none if tm_year=0) */
 
 static char sbuf[256];	/* scratch buffer, for readlink() */
 
+static char *dir=NULL;	/* directory to change to */
 static char *tape=NULL;  /* name of tape drive or file */
 
 int main(int argc,char **argv)
@@ -100,6 +101,13 @@ int main(int argc,char **argv)
 				case 'c':	/* create archive */
 					create=1;
 					break;
+				case 'C':	/* change directory */
+					if(*p) dir=p;  /* -Cdir */
+					else {	/* -C dir */
+						if((--argc)==0) goto msgarg;
+						dir=*++argv;
+					}
+					goto nxtwrd;
 				case 'f':	/* specify archive filename */
 					if(*p) tape=p;  /* -ffilename */
 					else {	/* -f filename */
@@ -157,12 +165,14 @@ int main(int argc,char **argv)
 
 	if(append) {			/* append to existing tape */
 		opentape(tape,0,1);	/* open tape */
+		changedir();		/* change directory */
 		posneot(1);		/* space to EOT */
 		resetbuf();		/* start a new record */
 		addfiles(argc,argv);	/* add files onto end */
 	}
 	else if(create) {		/* initialize and write tape */
 		opentape(tape,1,1);	/* open tape */
+		changedir();		/* change directory */
 		posnbot();		/* rewind */
 		writevolhdr();		/* write volume header */
 		addfiles(argc,argv);	/* add files onto end */
@@ -170,17 +180,29 @@ int main(int argc,char **argv)
 	else if(type) {			/* list files on tape */
 		if(argc!=0) usage(1);	/* should we handle filenames?  no. */
 		opentape(tape,0,0);	/* open tape */
+		changedir();		/* change directory */
 		posnbot();		/* rewind */
 		listfiles();		/* list files */
 	}
 	else /*if(extract)*/ {		/* extract files from tape */
 		if(argc!=0) usage(1);	/* should we handle filenames?  soon */
 		opentape(tape,0,0);	/* open tape */
+		changedir();		/* change directory */
 		posnbot();		/* rewind */
 		extfiles(argc,argv);	/* extract files */
 	}
 	closetape();
 	exit(0);
+}
+
+/* change directory if requested */
+static void changedir(void)
+{
+	if(!dir) return;
+	if(chdir(dir)<0) {
+		perror("?Cannot change directory");
+		exit(1);
+	}
 }
 
 /* write DUMP volume header to tape */
@@ -513,6 +535,7 @@ Usage:  itstar switches file1 file2 file3 ...\n\
 \n\
 switches:\n\
   -c            create tape\n\
+  -C DIR        change directory to DIR after opening tape\n\
   -t            type out tape contents\n\
   -r            append files to tape\n\
   -x            extract files from tape\n\
