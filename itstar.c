@@ -400,7 +400,7 @@ static void extfiles(int argc,char **argv)
 }
 
 /* skip a single file */
-static void skipfile()
+void skipfile()
 {
 	while (taperead() >= 0)
 		;
@@ -446,7 +446,6 @@ static void extfile()
 		sprintf(lname,"%s/%s.%s",lufd,lfn1,lfn2);  /* combine */
 		if(symlink(lname,fname)<0) {  /* create link */
 			perror(fname);
-			exit(1);
 		}
 		/* can't apply dates since target may not exist */
 		taperead();		/* read the EOF mark */
@@ -462,7 +461,7 @@ static void extfile()
 			else u.actime=u.modtime;  /* use creation date if not */
 			if(utime(fname,&u)<0) {
 				perror("?Error setting file dates");
-				exit(1);
+				taperead(); /* read the EOF mark */
 			}
 		}
 	}
