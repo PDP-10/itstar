@@ -79,6 +79,7 @@ char ufd[7], fn1[7], fn2[7];  /* buffers for UFD and filename 1/2 */
 char lufd[7], lfn1[7], lfn2[7];  /* same as above, for target of link */
 char dev[7], author[7];	 /* not currently used, but available in DIR.LIST */
 struct tm cdate, rdate;  /* creation, ref dates (none if tm_year=0) */
+static int tape_year, tape_month, tape_day;
 
 static char sbuf[256];	/* scratch buffer, for readlink() */
 
@@ -448,6 +449,35 @@ static void extfile()
 	if(verify) printf("[OK]\n");
 }
 
+static void datime(unsigned long l, unsigned long r)
+{
+	int y, m, d;
+
+	y = l>>9L;
+	m = (l>>5L)&017;
+	d = l&037;
+
+	/* Old tapes just store 1 bit of year.  We get the full year */
+	/* by combining this bit with the date in the the tape header. */
+	if (y < 2) {
+		y |= tape_year & ~1;
+		/* Dates that appear to be later than the tape creation */
+		/* must be two years older. */
+		if (y > tape_year ||
+		    (y == tape_year && m > tape_month) ||
+		    (y == tape_year && m == tape_month && d > tape_day))
+			y -= 2;
+	}
+
+	cdate.tm_year=y;
+	cdate.tm_mon=m-1;
+	cdate.tm_mday=d;
+	cdate.tm_hour=r/(60L*60L*2L);
+	cdate.tm_min=(r/(60L*2L))%60L;
+	cdate.tm_sec=(r/2L)%60L;
+	cdate.tm_isdst=(-1);
+}
+
 /* scan the tape and process each file found (after setting up globals) */
 static void scantape(int argc,char **argv,void (*process)())
 {
@@ -468,6 +498,10 @@ static void scantape(int argc,char **argv,void (*process)())
 		insix(ufd);	/* 3: SIXBIT creation date */
 		inword(&l,&r);	/* 4: type */
 				/* 0=random, >0=full, <0=incremental */
+		/* Remember tape creation date for 1-bit year conversion. */
+		tape_year = 10*(ufd[0]-'0') + ufd[1]-'0';
+		tape_month = 10*(ufd[2]-'0') + ufd[3]-'0';
+		tape_day = 10*(ufd[4]-'0') + ufd[5]-'0';
 		if(type)
 			printf(", created %c%c/%c%c/%c%c, type=%s\n",
 				ufd[2],ufd[3], ufd[4],ufd[5], ufd[0],ufd[1],
@@ -498,13 +532,7 @@ static void scantape(int argc,char **argv,void (*process)())
 
 		if(len) {	/* 6: creation date */
 			inword(&l,&r);
-			cdate.tm_year=(l>>9L);
-			cdate.tm_mon=((l>>5L)&017)-1;
-			cdate.tm_mday=l&037;
-			cdate.tm_hour=r/(60L*60L*2L);
-			cdate.tm_min=(r/(60L*2L))%60L;
-			cdate.tm_sec=(r/2L)%60L;
-			cdate.tm_isdst=(-1);
+			datime(l,r);
 			len--;
 		}
 		else cdate.tm_year=0;
