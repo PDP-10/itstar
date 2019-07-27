@@ -453,6 +453,13 @@ static void datime(unsigned long l, unsigned long r)
 {
 	int y, m, d;
 
+	/* If the timestamp is all zeros or all ones, it's invalid. */
+	if ((l == 0L && r == 0L) ||
+	    (l == 0777777L && r == 0777777L)) {
+		cdate.tm_year = 0;
+		return;
+	}
+
 	y = l>>9L;
 	m = (l>>5L)&017;
 	d = l&037;
@@ -468,6 +475,12 @@ static void datime(unsigned long l, unsigned long r)
 		    (y == tape_year && m == tape_month && d > tape_day))
 			y -= 2;
 	}
+
+	/* Sanity checking the month and day values. */
+	if (m == 0)
+		m = 1;
+	if (d == 0)
+		d = 1;
 
 	cdate.tm_year=y;
 	cdate.tm_mon=m-1;
