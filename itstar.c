@@ -138,6 +138,9 @@ int main(int argc,char **argv)
 				case 'B':	/* Big endian record lenght */
 					big_endian=1;
 					break;
+				case 'E':	/* E-11 tape image format */
+					simh=0;
+					break;
 				default:
 					fprintf(stderr,"?Invalid option: %c\n",
 						*(p-1));
@@ -593,6 +596,7 @@ switches:\n\
   -f -          use STDIN/STDOUT for image file\n\
   -f HOST:DEV   use \"rmt\" remote tape server\n\
   -v            verify (display) names of all files accessed\n\
+  -E            use E-11 tape image format\n\
 \n");
 
 /* need some way to differentiate rmt protocol from my own weird one,
