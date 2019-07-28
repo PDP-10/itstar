@@ -53,6 +53,7 @@ extern unsigned long count;	/* count of tape frames written */
 extern int simh;		/* NZ to support SIMH tape images */
 int seven_track = 0;		/* NZ to write 7-track tape images */
 int big_endian = 0;		/* NZ to read big endian record length */
+int old_header = 0;		/* NZ to limit file header to six words */
 
 static void usage(), itsname(), extitsname(), changedir();
 static void addfiles(), addfile(), listfiles(), listfile(),
@@ -318,9 +319,12 @@ static void addfile(int argc,char **argv,char *f)
 /* output buffer must have been initialized with resetbuf() */
 void save(char *f)
 {
+	long len = 7;
 	if(verify) printf("%s => %s;%s %s ",f,ufd,fn1,fn2);
 
-	outword(-7L,0L);	/* 1: AOBJN ptr giving length */
+	if (old_header)
+		len = 6;
+	outword(-len,0L);	/* 1: AOBJN ptr giving length */
 	outsix(ufd);		/* 2: UFD */
 	outsix(fn1);		/* 3: filename 1 */
 	outsix(fn2);		/* 4: filename 2 */
@@ -335,12 +339,15 @@ void save(char *f)
 	/* left of it are unused in UFD entries so hopefully it's safe to */
 	/* grab them */
 	/* tm_year and UFD year field are both YEAR-1900 */
-	outword((((unsigned long)cdate.tm_year)<<9L)|
-		(((unsigned long)cdate.tm_mon+1L)<<5L)|
-		(unsigned long)cdate.tm_mday,
-		((((unsigned long)cdate.tm_hour*60L)+
-		(unsigned long)cdate.tm_min)*60L+
-		(unsigned long)cdate.tm_sec)*2L);  /* 7: date of last ref */
+	if (len >= 7) {
+		outword((((unsigned long)cdate.tm_year)<<9L)|
+			(((unsigned long)cdate.tm_mon+1L)<<5L)|
+			(unsigned long)cdate.tm_mday,
+			((((unsigned long)cdate.tm_hour*60L)+
+			(unsigned long)cdate.tm_min)*60L+
+			(unsigned long)cdate.tm_sec)*2L);
+		/* 7: date of last ref */
+	}
 /*	tapeflush();	*/	/* finish off label record */
 
 	if(islink) {		/* it's a link, not a file */
@@ -597,6 +604,7 @@ switches:\n\
   -f HOST:DEV   use \"rmt\" remote tape server\n\
   -v            verify (display) names of all files accessed\n\
   -E            use E-11 tape image format\n\
+  -O            write old format tape (6 file header words)\n\
 \n");
 
 /* need some way to differentiate rmt protocol from my own weird one,
