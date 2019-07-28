@@ -374,7 +374,9 @@ static void listfiles(int argc,char **argv)
 /* list a single file (called back by scantape()) */
 static void listfile()
 {
-	printf("%s;%s %s",ufd,fn1,fn2);  /* print ITS filename */
+	static const char spaces[] = "                    ";
+	int n;
+	n=printf("%s;%s %s",ufd,fn1,fn2);  /* print ITS filename */
 	if (verify) {
 	  if(islink) {
 	    insix(lfn1);
@@ -382,7 +384,8 @@ static void listfile()
 	    insix(lufd);
 	    printf ("   %s;%s %s", lufd, lfn1, lfn2);
 	  } else if (cdate.tm_year!=0) {
-	      printf ("   %d-%d-%d", cdate.tm_year + 1900, cdate.tm_mon,
+	      fputs (spaces + n, stdout);
+	      printf ("   %4d-%02d-%02d", cdate.tm_year + 1900, cdate.tm_mon,
 		      cdate.tm_mday);
 	  }
 	}
