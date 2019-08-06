@@ -51,6 +51,7 @@
 extern unsigned long bpi;	/* tape density in bits per inch */
 extern unsigned long count;	/* count of tape frames written */
 extern int simh;		/* NZ to support SIMH tape images */
+int seven_track = 0;		/* NZ to write 7-track tape images */
 
 static void usage(), itsname(), extitsname(), changedir();
 static void addfiles(), addfile(), listfiles(), listfile(),
@@ -128,6 +129,9 @@ int main(int argc,char **argv)
 					break;
 				case 'x':	/* extract files */
 					extract=1;
+					break;
+				case '7':	/* 7-track tape images */
+					seven_track=1;
 					break;
 				default:
 					fprintf(stderr,"?Invalid option: %c\n",
