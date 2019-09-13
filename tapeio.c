@@ -354,8 +354,13 @@ int getrec(char *buf,int len)
 	}
 	else if(tapefile) {		/* image file */
 		doread(tapefd,byte,4);	/* get record length */
+#if 1
+		l=((unsigned long)byte[0]<<24L)|((unsigned long)byte[1]<<16L)|
+			((unsigned long)byte[2]<<8L)|(unsigned long)byte[3];
+#else
 		l=((unsigned long)byte[3]<<24L)|((unsigned long)byte[2]<<16L)|
 			((unsigned long)byte[1]<<8L)|(unsigned long)byte[0];
+#endif
 					/* compose into longword */
 		if(l>len) goto toolong;	/* don't read if too long for buf */
 		if(l!=0) {		/* get data unless tape mark */
@@ -363,10 +368,10 @@ int getrec(char *buf,int len)
 			/* SIMH pads odd records, read scratch byte */
 			if(simh&&(l&1)) doread(tapefd,scratch,1);
 			doread(tapefd,byte,4);  /* get trailing record length */
-			if((((unsigned long)byte[3]<<24L)|
-				((unsigned long)byte[2]<<16L)|
-				((unsigned long)byte[1]<<8)|
-				(unsigned long)byte[0])!=l) {	/* should match */
+			if((((unsigned long)byte[0]<<24L)|
+				((unsigned long)byte[1]<<16L)|
+				((unsigned long)byte[2]<<8)|
+				(unsigned long)byte[3])!=l) {	/* should match */
 				fprintf(stderr,"?Corrupt tape image\n");
 				exit(1);
 			}

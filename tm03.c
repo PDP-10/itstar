@@ -41,7 +41,7 @@
 
 //#define RECLEN (5*512)	/* we deal in 512-word records */
 //			/* (AI:SYSDOC;DUMP FORMAT says 1024 but it's wrong) */
-#define RECLEN (10*512)	/* maybe it's not so wrong after all */
+#define RECLEN (6*1024)	/* maybe it's not so wrong after all */
 
 void outword();
 
@@ -74,7 +74,7 @@ int taperead()
 {
 	recl=getrec(tapebuf,RECLEN);
 	if(recl<=0) return(-1);	/* EOF */
-	if(recl%5) {		/* TM03 stores words as 5 tape frames */
+	if(recl%6) {		/* TM03 stores words as 5 tape frames */
 		fprintf(stderr,"?Record length not word multiple\n");
 		exit(1);
 	}
@@ -92,6 +92,21 @@ void inword(long *l,long *r)
 		exit(1);
 	}
 
+#if 1
+	/* left half */
+	a=*tapeptr++;
+	b=*tapeptr++;
+	c=*tapeptr++;
+	*l=((a<<12)&0770000)|((b<<6)&007700)|(c&077);
+
+	/* right half */
+	a=*tapeptr++;
+	b=*tapeptr++;
+	c=*tapeptr++;
+	*r=((a<<12)&0770000)|((b<<6)&007700)|(c&077);
+
+	recl-=6;			/* count it */
+#else
 	/* left half */
 	a=*tapeptr++;
 	b=*tapeptr++;
@@ -104,6 +119,7 @@ void inword(long *l,long *r)
 	*r=((c<<12)&0770000)|((b<<4)&0007760)|(a&017);
 
 	recl-=5;			/* count it */
+#endif
 }
 
 /* as above but wraps to next rec if needed */
@@ -119,21 +135,22 @@ int nextword(long *l,long *r)
 	a=*tapeptr++;
 	b=*tapeptr++;
 	c=*tapeptr++;
-	*l=((a<<10)&0776000)|((b<<2)&0001774)|((c>>6)&03);
+	*l=((a<<12)&0770000)|((b<<6)&007700)|(c&077);
 
 	/* right half */
-	b=*tapeptr++;
 	a=*tapeptr++;
-	*r=((c<<12)&0770000)|((b<<4)&0007760)|(a&017);
+	b=*tapeptr++;
+	c=*tapeptr++;
+	*r=((a<<12)&0770000)|((b<<6)&007700)|(c&077);
 
-	recl-=5;			/* count it */
+	recl-=6;			/* count it */
 	return(0);
 }
 
 /* return # of words remaining in buffer */
 int remaining()
 {
-	return(recl/5);
+	return(recl/6);
 }
 
 /* write a word */
