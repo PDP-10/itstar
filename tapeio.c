@@ -101,6 +101,7 @@ unsigned long bpi=BPI;	/* tape density (for tape length msg) */
 int simh=1;		/* NZ => SIMH file format (records padded to even */
 			/* lengths) */
 			/* 0 => Ersatz-11 file format (no padding) */
+extern int big_endian;
 
 /* magtape commands */
 static struct mtop mt_weof={ MTWEOF, 1 }; /* operation, count */
@@ -336,6 +337,26 @@ void posneot()
 	}
 }
 
+unsigned long getlen()
+{
+	unsigned char byte[4];		/* 32 bits for length field(s) */
+	unsigned long l;		/* at least 32 bits */
+
+	doread(tapefd,byte,4);	/* get record length */
+				/* compose into longword */
+	if (big_endian)
+		l=((unsigned long)byte[0]<<24L)|
+		  ((unsigned long)byte[1]<<16L)|
+		  ((unsigned long)byte[2]<<8L)|
+		  (unsigned long)byte[3];
+	else
+		l=((unsigned long)byte[3]<<24L)|
+		  ((unsigned long)byte[2]<<16L)|
+		  ((unsigned long)byte[1]<<8L)|
+		  (unsigned long)byte[0];
+	return l;
+}
+
 /* read a tape record, return actual length (0=tape mark) */
 int getrec(char *buf,int len)
 {
@@ -353,20 +374,13 @@ int getrec(char *buf,int len)
 		if(l!=0) doread(tapefd,buf,l);  /* get data unless tape mark */
 	}
 	else if(tapefile) {		/* image file */
-		doread(tapefd,byte,4);	/* get record length */
-		l=((unsigned long)byte[3]<<24L)|((unsigned long)byte[2]<<16L)|
-			((unsigned long)byte[1]<<8L)|(unsigned long)byte[0];
-					/* compose into longword */
+		l=getlen();
 		if(l>len) goto toolong;	/* don't read if too long for buf */
 		if(l!=0) {		/* get data unless tape mark */
 			doread(tapefd,buf,l);  /* read data */
 			/* SIMH pads odd records, read scratch byte */
 			if(simh&&(l&1)) doread(tapefd,scratch,1);
-			doread(tapefd,byte,4);  /* get trailing record length */
-			if((((unsigned long)byte[3]<<24L)|
-				((unsigned long)byte[2]<<16L)|
-				((unsigned long)byte[1]<<8)|
-				(unsigned long)byte[0])!=l) {	/* should match */
+			if(getlen()!=l) {	/* should match */
 				fprintf(stderr,"?Corrupt tape image\n");
 				exit(1);
 			}
