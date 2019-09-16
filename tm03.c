@@ -42,9 +42,8 @@
 
 #include "itstar.h"
 
-//#define RECLEN (5*512)	/* we deal in 512-word records */
-//			/* (AI:SYSDOC;DUMP FORMAT says 1024 but it's wrong) */
-#define RECLEN9 (5*1024)	/* maybe it's not so wrong after all */
+/* AI:SYSDOC;DUMP FORMAT says 1024 */
+#define RECLEN9 (5*1024)
 #define RECLEN7 (6*1024)
 #define RECLEN (seven_track ? RECLEN7 : RECLEN9)
 
