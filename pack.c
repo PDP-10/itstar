@@ -195,11 +195,24 @@ static unsigned char pfx177[128] = {
 /* pack tape data into WEENIX form, creating a file named FILE */
 void pack(char *file)
 {
+	char newname[50];
+	int counter = 0;
 	register unsigned char c, d, prev;
 	register int i;
 	static char inbuf[5];
 	unsigned long l, r;
+	struct stat s;
 	char *p;
+
+	strcpy(newname, file);
+	while(stat(newname,&s)==0) {
+		sprintf(newname, "%s|%d", file, counter++);
+	}
+	if(strcmp(file, newname)) {
+		fprintf(stderr, "WARNING: File %s already exists; ", newname);
+		fprintf(stderr, "renaming to %s\n", newname);
+		strcpy(file, newname);
+	}
 
 	out=fopen(file,"wb");	/* create output file */
 	if(out==NULL) {
