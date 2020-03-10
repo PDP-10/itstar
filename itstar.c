@@ -402,7 +402,7 @@ static void extfiles(int argc,char **argv)
 /* extract a single file (called back by scantape()) */
 static void extfile()
 {
-	static char fname[6+1+6+1+6+1]; /* filename = "ufd/fn1.fn2"<NUL> */
+	static char fname[6+1+6+1+6+1+10]; /* filename = "ufd/fn1.fn2"<NUL> */
 	static char lname[6+1+6+1+6+1]; /* same, for link name */
 	struct stat s;
 	struct utimbuf u;
