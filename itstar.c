@@ -402,6 +402,8 @@ static void extfiles(int argc,char **argv)
 /* extract a single file (called back by scantape()) */
 static void extfile()
 {
+	char newname[100];
+	int counter = 0;
 	static char fname[6+1+6+1+6+1+10]; /* filename = "ufd/fn1.fn2"<NUL> */
 	static char lname[6+1+6+1+6+1]; /* same, for link name */
 	struct stat s;
@@ -421,6 +423,17 @@ static void extfile()
 			perror(ufd);
 			exit(1);
 		}
+	}
+
+	/* renames if file already exists */
+	strcpy(newname, fname);
+	while(lstat(newname,&s)==0) {
+		sprintf(newname, "%s|%d", fname, counter++);
+	}
+	if(strcmp(fname, newname)) {
+		fprintf(stderr, "WARNING: File %s already exists; ", fname);
+		fprintf(stderr, "renaming to %s\n", newname);
+		strcpy(fname, newname);
 	}
 
 	/* create the file (or link) */
