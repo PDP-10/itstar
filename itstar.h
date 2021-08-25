@@ -4,6 +4,7 @@ void save(char *f);
 void resetbuf();
 void tapeflush();
 int taperead();
+void skipfile();
 void inword(long *l,long *r);
 void outword(register unsigned long l,register unsigned long r);
 int nextword(long *l,long *r);

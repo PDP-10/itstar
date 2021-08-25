@@ -399,6 +399,14 @@ static void extfiles(int argc,char **argv)
 	scantape(argc,argv,extfile);
 }
 
+/* skip a single file */
+void skipfile()
+{
+	while (taperead() >= 0)
+		;
+	taperead();
+}
+
 /* extract a single file (called back by scantape()) */
 static void extfile()
 {
@@ -451,7 +459,6 @@ static void extfile()
 		sprintf(lname,"%s/%s.%s",lufd,lfn1,lfn2);  /* combine */
 		if(symlink(lname,fname)<0) {  /* create link */
 			perror(fname);
-			exit(1);
 		}
 		/* can't apply dates since target may not exist */
 		taperead();		/* read the EOF mark */
@@ -467,7 +474,7 @@ static void extfile()
 			else u.actime=u.modtime;  /* use creation date if not */
 			if(utime(fname,&u)<0) {
 				perror("?Error setting file dates");
-				exit(1);
+				taperead(); /* read the EOF mark */
 			}
 		}
 	}
@@ -555,9 +562,10 @@ static void scantape(int argc,char **argv,void (*process)())
 	while(taperead()==0) {	/* read file label */
 	fhead:	inword(&l,&r);	/* 1: AOBJN ptr giving length */
 		len=01000000L-l; /* length of record */
-		if(len<4) {	/* must have at least filename */
-			fprintf(stderr,"?Invalid tape format\n");
-			exit(1);
+		if(len<4||len>10) {
+			fprintf(stderr,"?Invalid tape file header\n");
+			skipfile();
+			goto fhead;
 		}
 		insix(ufd);	/* 2: UFD */
 		insix(fn1);	/* 3: FN1 */
