@@ -80,7 +80,7 @@ char ufd[7], fn1[7], fn2[7];  /* buffers for UFD and filename 1/2 */
 char lufd[7], lfn1[7], lfn2[7];  /* same as above, for target of link */
 char dev[7], author[7];	 /* not currently used, but available in DIR.LIST */
 struct tm cdate, rdate;  /* creation, ref dates (none if tm_year=0) */
-static int tape_year, tape_month, tape_day;
+static int tape_year = 0, tape_month = 0, tape_day = 0;
 
 static char sbuf[256];	/* scratch buffer, for readlink() */
 
@@ -128,7 +128,7 @@ int main(int argc,char **argv)
 					type=1;
 					break;
 				case 'v':	/* verify filenames */
-					verify=1;
+					verify++;
 					break;
 				case 'x':	/* extract files */
 					extract=1;
@@ -141,6 +141,9 @@ int main(int argc,char **argv)
 					break;
 				case 'E':	/* E-11 tape image format */
 					simh=0;
+					break;
+				case 'O':
+					old_header=1;
 					break;
 				default:
 					fprintf(stderr,"?Invalid option: %c\n",
@@ -399,6 +402,14 @@ static void extfiles(int argc,char **argv)
 	scantape(argc,argv,extfile);
 }
 
+/* skip a single file */
+void skipfile()
+{
+	while (taperead() >= 0)
+		;
+	taperead();
+}
+
 /* extract a single file (called back by scantape()) */
 static void extfile()
 {
@@ -451,7 +462,6 @@ static void extfile()
 		sprintf(lname,"%s/%s.%s",lufd,lfn1,lfn2);  /* combine */
 		if(symlink(lname,fname)<0) {  /* create link */
 			perror(fname);
-			exit(1);
 		}
 		/* can't apply dates since target may not exist */
 		taperead();		/* read the EOF mark */
@@ -467,7 +477,7 @@ static void extfile()
 			else u.actime=u.modtime;  /* use creation date if not */
 			if(utime(fname,&u)<0) {
 				perror("?Error setting file dates");
-				exit(1);
+				taperead(); /* read the EOF mark */
 			}
 		}
 	}
@@ -509,17 +519,20 @@ static void datime(unsigned long l, unsigned long r)
 		d = 1;
 
 	cdate.tm_year=y;
-	cdate.tm_mon=m-1;
+	cdate.tm_mon=m;
 	cdate.tm_mday=d;
 	cdate.tm_hour=r/(60L*60L*2L);
 	cdate.tm_min=(r/(60L*2L))%60L;
 	cdate.tm_sec=(r/2L)%60L;
 	cdate.tm_isdst=(-1);
+	printf ("[19%02d-%02d-%02d %02d:%02d:%02d]", y, m, d,
+		cdate.tm_hour, cdate.tm_min, cdate.tm_sec);
 }
 
 /* scan the tape and process each file found (after setting up globals) */
 static void scantape(int argc,char **argv,void (*process)())
 {
+	int label = 0;
 	unsigned long l,r,len;
 
 	if(taperead()<0) {	/* read volume header */
@@ -527,9 +540,33 @@ static void scantape(int argc,char **argv,void (*process)())
 		exit(1);
 	}
 
+	printf ("REMAINING: %d\n", remaining());
+	while (remaining() == 10) {
+	  if (!label) {
+	    insix(ufd);
+	    insix(author);
+	    insix(fn1);
+	    insix(author);
+	    insix(fn2);
+	    insix(author);
+	    insix(dev);
+	    printf ("LABEL: %s %s %s %s\n", ufd, fn1, fn2, dev);
+	  }
+	  label = 1;
+	  taperead();
+	  if(remaining() == 0)
+	    taperead();
+	}
+	printf ("REMAINING: %d\n", remaining());
+	while (remaining() <= 3)
+	  taperead();
+	printf ("REMAINING: %d\n", remaining());
+
+	if (!label) {
 		/* display volume header info */
 	inword(&l,&r);	/* 1: AOBJN ptr giving length */
 	len=01000000L-l; /* length of record */
+	printf ("len = %lu\n", len);
 	if(len>=4) {
 		inword(&l,&r);	/* 2: tape,,real */
 		if(type)
@@ -538,6 +575,11 @@ static void scantape(int argc,char **argv,void (*process)())
 		inword(&l,&r);	/* 4: type */
 				/* 0=random, >0=full, <0=incremental */
 		/* Remember tape creation date for 1-bit year conversion. */
+	if (l == 0 && r == 0) {
+	  tape_year = 72;
+	  tape_month = 4;
+	  tape_day = 21;
+	} else {
 		tape_year = 10*(ufd[0]-'0') + ufd[1]-'0';
 		tape_month = 10*(ufd[2]-'0') + ufd[3]-'0';
 		tape_day = 10*(ufd[4]-'0') + ufd[5]-'0';
@@ -546,18 +588,21 @@ static void scantape(int argc,char **argv,void (*process)())
 				ufd[2],ufd[3], ufd[4],ufd[5], ufd[0],ufd[1],
 				(l|r)==0?"random":
 					((l&0400000)?"incremental":"full"));
+	}
 		len-=4;		/* eat those words */
 	}
 	while(len--) inword(&l,&r);  /* eat unknown words */
 	if(remaining()!=0)	/* file header in same rec */
 		goto fhead;
+	}
 
 	while(taperead()==0) {	/* read file label */
 	fhead:	inword(&l,&r);	/* 1: AOBJN ptr giving length */
 		len=01000000L-l; /* length of record */
-		if(len<4) {	/* must have at least filename */
-			fprintf(stderr,"?Invalid tape format\n");
-			exit(1);
+		if(len<4||len>10) {
+			fprintf(stderr,"?Invalid tape file header\n");
+			skipfile();
+			goto fhead;
 		}
 		insix(ufd);	/* 2: UFD */
 		insix(fn1);	/* 3: FN1 */

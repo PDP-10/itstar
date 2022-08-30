@@ -78,17 +78,19 @@ void tapeflush()
 /* read tape record into buf, return 0 on success or -1 on EOF */
 int taperead()
 {
+  memset(tapebuf, 0, RECLEN);
 	recl=getrec(tapebuf,RECLEN);
+	//fprintf (stderr, "[%d]", recl);
 	if(recl<=0) return(-1);	/* EOF */
 	if (seven_track) {
 		if(recl%6) {		/* 7-track tapes store words as 6 tape frames */
-			fprintf(stderr,"?Record length not word multiple\n");
-			exit(1);
+		  fprintf(stderr,"?Record length %d not word multiple\n", recl);
+			//exit(1);
 		}
 	} else {
 		if(recl%5) {		/* TM03 stores words as 5 tape frames */
-			fprintf(stderr,"?Record length not word multiple\n");
-			exit(1);
+		  fprintf(stderr,"?Record length %d not word multiple\n", recl);
+			//exit(1);
 		}
 	}
 	tapeptr=tapebuf;
@@ -100,7 +102,7 @@ void inword(long *l,long *r)
 {
 	register unsigned long a,b,c;
 
-	if(recl==0) {			/* no more data */
+	if(recl<=0) {			/* no more data */
 		fprintf(stderr,"?Tape record too short\n");
 		exit(1);
 	}
@@ -118,6 +120,7 @@ void inword(long *l,long *r)
 		c=*tapeptr++;
 		*r=((a<<12)&0770000)|((b<<6)&0007700)|(c&077);
 
+		//printf ("{ %06lo,,%06lo }", *l, *r);
 		recl -= 6;
 		return;
 	}
@@ -142,7 +145,7 @@ int nextword(long *l,long *r)
 {
 	register unsigned long a,b,c;
 
-	if(recl==0)			/* no more data */
+	if(recl<=0)			/* no more data */
 		if(taperead()<0) return(-1);
 
 	if (seven_track) {

@@ -374,8 +374,10 @@ int getrec(char *buf,int len)
 		if(l!=0) doread(tapefd,buf,l);  /* get data unless tape mark */
 	}
 	else if(tapefile) {		/* image file */
+	  do {
 		l=getlen();
-		if(l>len) goto toolong;	/* don't read if too long for buf */
+	  } while (l == 0x80000000);
+		if(l>len+2) goto toolong;	/* don't read if too long for buf */
 		if(l!=0) {		/* get data unless tape mark */
 			doread(tapefd,buf,l);  /* read data */
 			/* SIMH pads odd records, read scratch byte */
