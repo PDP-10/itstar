@@ -17,15 +17,14 @@ UNAME != uname
 -include $(UNAME).conf
 
 itstar: itstar.o dirlst.o pack.o tapeio.o tm03.o unpack.o zopen.o
-	cc -o itstar itstar.o dirlst.o pack.o tapeio.o \
+	cc --std=gnu11 -o itstar itstar.o dirlst.o pack.o tapeio.o \
 		tm03.o unpack.o zopen.o $(LIBS)
-	strip itstar
 
 .c.o: itstar.h
-	cc -O -c $<
+	cc --std=gnu11 -O -c $<
 
 tapeio.o: tapeio.c itstar.h tapsrv.h
-	cc -O -c tapeio.c
+	cc --std=gnu11 -O -c tapeio.c
 
 clean:
 	-rm *.o itstar
