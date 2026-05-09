@@ -144,7 +144,7 @@ void opentape(char *name,int create,int writable)
 	if(tape==NULL) tape=TAPE;		/* or use our default */
 
 	/* just a file if no colon in filename */
-	if((p=index(tape,':'))==NULL) {
+	if((p=strchr(tape,':'))==NULL) {
 /* there's probably a better way to handle this, in case a file is really
    a link to a tape drive -- handler index or something? */
 		if(strncmp(tape,"/dev/",5)==0) {
@@ -215,7 +215,7 @@ void opentape(char *name,int create,int writable)
 		}
 #endif
 		/* connect to "rexec" server */
-		if((p=index(host,'@'))==NULL) {
+		if((p=strchr(host,'@'))==NULL) {
 			p=host;		/* no @, point at hostname */
 			user=NULL;
 		}

@@ -124,9 +124,9 @@ static void file(char *dirname)
 
 		/* handle link or file */
 		if(size<0) { /* link */
-			p=index(link,';');
+			p=strchr(link,';');
 			*p=0, p+=2;
-			q=index(p,' ');
+			q=strchr(p,' ');
 			*q++=0;
 			len=strlen(link);	/* copy/truncate link UFD */
 			if(len>6) len=6;
