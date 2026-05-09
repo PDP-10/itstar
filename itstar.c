@@ -674,7 +674,7 @@ static void extitsname(char *f,char *ufd,char *fn1,char *fn2)
 	char *p, *q, *pfn;
 
 	/* extract dir name/filename, convert to UFD/FN1/FN2 */
-	pfn=rindex(f,'/');	/* filename starts after last "/" */
+	pfn=strrchr(f,'/');	/* filename starts after last "/" */
 	if(pfn==NULL) {		/* if any */
 		ufd[0]='\0';	/* no UFD */
 		pfn=f;
@@ -693,13 +693,13 @@ static void extitsname(char *f,char *ufd,char *fn1,char *fn2)
 	}
 
 	/* split apart filename and extension */
-	p=index(pfn,'.');	/* extension starts after first "." */
+	p=strchr(pfn,'.');	/* extension starts after first "." */
 	if(p==NULL) {		/* if any */
 		fn2[0]='\0';	/* no FN2 */
 		len=strlen(pfn);  /* length */
 	}
 	else {
-		if((q=index(p+1,'.'))==NULL)  /* stop at next dot */
+		if((q=strchr(p+1,'.'))==NULL)  /* stop at next dot */
 			len=strlen(p+1);  /* no dot, get length of ext */
 		else len=(q-(p+1));  /* ext runs until next dot */
 		if(len>6) len=6;  /* stop at 6 */
