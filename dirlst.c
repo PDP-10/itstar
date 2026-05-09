@@ -40,9 +40,9 @@ void nomem();
 
 static FILE *dir;
 
-static int eat(char c), string(), number();
-static void file(), punt(), numhuge(), subhuge();
-static time_t valhuge();
+static int eat(char c), string(char *, int), number();
+static void file(char *), punt(), numhuge(char *, int), subhuge(char *, char *,int);
+static time_t valhuge(char *, int);
 
 extern char dev[7], ufd[7], fn1[7], fn2[7], author[7],
 	lufd[7], lfn1[7], lfn2[7];

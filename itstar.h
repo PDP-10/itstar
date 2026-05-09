@@ -12,7 +12,7 @@ int remaining();
 void opentape(char *name,int create,int writable);
 void closetape();
 void posnbot();
-void posneot();
+void posneot(int);
 int getrec(char *buf,int len);
 void putrec(char *buf,int len);
 void tapemark();
