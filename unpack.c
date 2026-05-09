@@ -42,7 +42,7 @@
 FILE *in, *out;
 
 FILE *zopen(char *);
-static void flush();
+static void flush(unsigned long word[5]);
 
 /*
  

@@ -90,8 +90,8 @@ struct mtop { int mt_op; int mt_count; };
 
 void nomem();
 
-static void doread(), dowrite(), sendcode(), getrc();
-static int response(), doioctl();
+static void doread(int, char *, int), dowrite(int, char *, int), sendcode(int), getrc();
+static int response(), doioctl(struct mtop *);
 void tapemark();
 
 static char *tape;	/* tape filename */

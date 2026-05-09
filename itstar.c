@@ -56,11 +56,11 @@ int seven_track = 0;		/* NZ to write 7-track tape images */
 int big_endian = 0;		/* NZ to read big endian record length */
 int old_header = 0;		/* NZ to limit file header to six words */
 
-static void usage(), itsname(), extitsname(), changedir();
-static void addfiles(), addfile(), listfiles(), listfile(),
-	extfiles(), extfile();
+static void usage(int), itsname(char *), extitsname(char *, char *, char *, char *), changedir();
+static void addfiles(int, char **), addfile(int, char **, char *), listfiles(int, char **), listfile(),
+	extfiles(int, char **), extfile();
 static void scantape(int argc,char **argv,void (*process)());
-void save(), weenixname(), nomem();
+void save(char *), weenixname(char *), nomem();
 void writevolhdr(void);
 void outsix(char *s);
 void insix(char *s);
@@ -196,7 +196,7 @@ int main(int argc,char **argv)
 		opentape(tape,0,0);	/* open tape */
 		changedir();		/* change directory */
 		posnbot();		/* rewind */
-		listfiles();		/* list files */
+		listfiles(argc,argv);	/* list files */
 	}
 	else /*if(extract)*/ {		/* extract files from tape */
 		if(argc!=0) usage(1);	/* should we handle filenames?  soon */
