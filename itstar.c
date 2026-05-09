@@ -75,7 +75,7 @@ unsigned long tapeno=1, reelno=0;  /* DUMP tape, reel number */
 
 unsigned long islink; /* NZ => file is a link, 0 => it's a file */
 
-char date6[7];	/* today's date in SIXBIT */
+char date6[17];	/* today's date in SIXBIT */
 
 char ufd[7], fn1[7], fn2[7];  /* buffers for UFD and filename 1/2 */
 char lufd[7], lfn1[7], lfn2[7];  /* same as above, for target of link */
