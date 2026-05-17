@@ -49,8 +49,6 @@
 
 extern int seven_track;
 
-void outword();
-
 static char tapebuf[RECLEN7];  /* tape I/O buffer */
 static char *tapeptr;	/* ptr to next posn in tapebuf[] */
 static int recl;	/* record length on read */
