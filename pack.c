@@ -204,7 +204,8 @@ void pack(char *file)
 	out=fopen(file,"wb");	/* create output file */
 	if(out==NULL) {
 		perror(file);
-		exit(1);
+		skipfile();
+		return;
 	}
 
 	if((remaining()==0)&&(taperead()<0)) {
